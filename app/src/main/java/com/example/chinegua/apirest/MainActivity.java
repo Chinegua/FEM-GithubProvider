@@ -8,6 +8,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.chinegua.apirest.models.Github;
+import com.example.chinegua.apirest.models.GithubRepository;
 
 import java.util.List;
 
@@ -22,10 +23,13 @@ public class MainActivity extends AppCompatActivity {
 
     private final String URL_BASE = "https://api.github.com";
     private RESTAPIService apiService;
+    GithubRepository db;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        db = new GithubRepository(getApplicationContext());
 
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -42,19 +46,17 @@ public class MainActivity extends AppCompatActivity {
         TextView userTV = (TextView) findViewById(R.id.searchUser);
         String userInput = userTV.getText().toString();
 
-
+        Log.i("MiW",">>>>>>>"+db.checkIfExist(userInput));
         Call<Github> call_async = apiService.getGithubUser(userInput);
 
         call_async.enqueue(new Callback<Github>() {
             @Override
             public void onResponse(Call<Github> call, Response<Github> response) {
                 Github githubUser = response.body();
-                if (null != githubUser) {
-                    /*for (Github country : countryList) {
-                        tvRespuesta.append(country.toString() + "\n\n");
-                    }*/
-                    Log.i("MiW", "obtenerInfoPais => respuesta=" + githubUser.toString());
-            }
+                //db.add(githubUser.getLogin(),githubUser.getAvatarUrl(),githubUser.getReposUrl(),githubUser.getPublicRepos()
+                //,githubUser.getFollowers(),githubUser.getFollowing());
+
+
 
         }
 
