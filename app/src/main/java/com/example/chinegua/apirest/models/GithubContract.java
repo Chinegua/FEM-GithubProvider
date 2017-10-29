@@ -12,6 +12,7 @@ final public class GithubContract {
 
     public static abstract class tablaGithub implements BaseColumns{
         static final String TABLE_NAME = "gitHubUser";
+        static final String COL_NAME_ID       = _ID;
         static final String COL_USERNAME = "username";
         static final String COL_AVATAR = "avatar";
         static final String COL_REPOS = "repos";
