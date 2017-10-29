@@ -4,9 +4,13 @@ import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import com.example.chinegua.apirest.models.GithubContract;
+import com.example.chinegua.apirest.models.GithubRepository;
 
 /**
  * Created by chinegua on 29/10/17.
@@ -27,24 +31,51 @@ public class GithubProvider extends ContentProvider {
         uriMatcher.addURI(AUTHORITY, ENTITY + "/*", ID_URI_USUARIO);
     }
 
-    //private Git repositorioClientes;
+    private GithubRepository githubRepository;
 
 
     @Override
     public boolean onCreate() {
-        return false;
+
+        githubRepository = new GithubRepository(getContext());
+
+        return true;
     }
 
     @Nullable
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
-        return null;
+
+        String where = "";
+        switch (uriMatcher.match(uri)) {
+            case ID_URI_USUARIO:  // URI termina en /#
+                where = GithubContract.tablaGithub.COL_USERNAME + " = ?";
+                selectionArgs = new String[1];
+                selectionArgs[0] = uri.getLastPathSegment();
+                break;
+        }
+
+        SQLiteDatabase db = githubRepository.getReadableDatabase();
+        Cursor cursor = db.query(
+                GithubContract.tablaGithub.TABLE_NAME,
+                projection,
+                where,
+                selectionArgs,
+                null, null, sortOrder);
+
+        return cursor;
     }
 
     @Nullable
     @Override
-    public String getType(@NonNull Uri uri) {
-        return null;
+    public String getType(Uri uri) {
+
+        switch (uriMatcher.match(uri)) {
+            case ID_URI_USUARIO:
+                return "vnd.android.cursor.dir/vnd.miw.githubUser";    // lista de entidades
+            default:
+                return null;
+        }
     }
 
     @Nullable
