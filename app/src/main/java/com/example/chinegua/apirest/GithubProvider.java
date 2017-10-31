@@ -15,6 +15,9 @@ import com.example.chinegua.apirest.models.Github;
 import com.example.chinegua.apirest.models.GithubContract;
 import com.example.chinegua.apirest.models.GithubRepository;
 
+import java.sql.Time;
+import java.sql.Timestamp;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -37,6 +40,7 @@ public class GithubProvider extends ContentProvider {
 
     private final String URL_BASE = "https://api.github.com";
     private RESTAPIService apiService;
+
     GithubRepository db;
 
 
@@ -62,6 +66,8 @@ public class GithubProvider extends ContentProvider {
                 .build();
 
         apiService = retrofit.create(RESTAPIService.class);
+        db = new GithubRepository(getContext());
+
 
         return true;
     }
@@ -80,33 +86,21 @@ public class GithubProvider extends ContentProvider {
                 break;
         }
 
+        Log.i("MiW",where);
+
         if(!githubRepository.checkIfExist(selectionArgs[0].toString())){
 
-            Log.i("MiW","selectionArgs >>>>>>>"+selectionArgs[0].toString());
+            Log.i("MiW","Este usuario no existe en BDD");
 
-            SQLiteDatabase db = githubRepository.getReadableDatabase();
-            Cursor cursor = db.query(
-                    GithubContract.tablaGithub.TABLE_NAME,
-                    projection,
-                    where,
-                    selectionArgs,
-                    null, null, sortOrder);
-
-            return cursor;
-
-        }
-        else{
             Call<Github> call_async = apiService.getGithubUser(selectionArgs[0].toString());
 
             call_async.enqueue(new Callback<Github>() {
                 @Override
                 public void onResponse(Call<Github> call, Response<Github> response) {
                     Github githubUser = response.body();
-                    db.add(githubUser.getLogin(),githubUser.getAvatarUrl(),githubUser.getReposUrl(),githubUser.getPublicRepos()
-                    ,githubUser.getFollowers(),githubUser.getFollowing());
-
-
-
+                    Log.i("MiW",githubUser.toString());
+                    db.add(githubUser.getLogin(),githubUser.getAvatarUrl(),githubUser.getReposUrl(),githubUser.getPublicRepos(),githubUser.getFollowers(),githubUser.getFollowing());
+                    db.close();
 
                 }
 
@@ -115,6 +109,30 @@ public class GithubProvider extends ContentProvider {
                     Log.i("MiW","Error al obtener los datos");
                 }
             });
+
+
+
+
+            try {
+                Thread.sleep(4000);
+
+                SQLiteDatabase db = githubRepository.getReadableDatabase();
+                Cursor cursor = db.query(
+                        GithubContract.tablaGithub.TABLE_NAME,
+                        projection,
+                        where,
+                        selectionArgs,
+                        null, null, sortOrder);
+                return cursor;
+            } catch (InterruptedException e) {
+
+                e.printStackTrace();
+                return null;
+            }
+
+        }
+        else{
+            Log.i("MiW","Este usuario ya existe en BDD");
 
             SQLiteDatabase db = githubRepository.getReadableDatabase();
             Cursor cursor = db.query(
